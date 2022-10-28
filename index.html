@@ -24,6 +24,7 @@
                 redirect: 'follow'
             };
             // make API call with parameters and use promises to get response
+            console.log("RAWWWW" + raw);
             fetch("https://0evbaeuovi.execute-api.us-east-1.amazonaws.com/dev", requestOptions)
                 .then(response => response.text())
                 .then(result => alert(JSON.parse(result).message))
@@ -82,10 +83,9 @@
                 </div>
 
                 <div class="form-login">
-                    <button>SUBMIT</button>
                     <button type="button" onclick="callAPI(document.getElementById('the-date').value,document.getElementById('name-select').value,
                                          document.getElementById('door-select').value,document.getElementById('pallet-count').value,
-                                         document.getElementById('comments').value)">Call API</button>
+                                         document.getElementById('comments').value)">SUBMIT</button>
                 </div>
             </form>
         </div>
