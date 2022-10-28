@@ -6,6 +6,30 @@
     <title>FPDS pallet form</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+
+    <script>
+        // define the callAPI function that takes a first name and last name as parameters
+        var callAPI = (theDate, username, door, pallets, comments) => {
+            // instantiate a headers object
+            var myHeaders = new Headers();
+            // add content type header to object
+            myHeaders.append("Content-Type", "application/json");
+            // using built in JSON utility package turn object to string and store in a variable
+            var raw = JSON.stringify({ "date": theDate, "username": username, "door": door, "pallets": pallets, "comments": comments });
+            // create a JSON object with parameters for API call and store in a variable
+            var requestOptions = {
+                method: 'POST',
+                headers: myHeaders,
+                body: raw,
+                redirect: 'follow'
+            };
+            // make API call with parameters and use promises to get response
+            fetch("https://0evbaeuovi.execute-api.us-east-1.amazonaws.com/dev", requestOptions)
+                .then(response => response.text())
+                .then(result => alert(JSON.parse(result).message))
+                .catch(error => console.log('error', error));
+        }
+    </script>
 </head>
 
 <body>
@@ -21,7 +45,7 @@
                     <h1>FPDS PALLET FORM</h1>
                 </div>
                 <div class="form-holder active">
-                    <input type="datetime-local" class="form-control" required />
+                    <input id="the-date" type="datetime-local" class="form-control" required />
                 </div>
                 <div class="form-holder">
                     <select id="name-select" class="form-control" required>
@@ -48,16 +72,20 @@
                 </div>
 
                 <div class="form-holder">
-                    <input type="number" placeholder="Number of pallets in FPDS" class="form-control" required />
+                    <input id="pallet-count" type="number" placeholder="Number of pallets in FPDS" class="form-control"
+                        required />
                 </div>
 
                 <div class="form-holder" id="txtarea">
-                    <textarea name="textarea" rows="10" cols="1" placeholder="Why are these pallets in FPDS?"
-                        class="textarea form-control" required></textarea>
+                    <textarea id="comments" name="textarea" rows="10" cols="1"
+                        placeholder="Why are these pallets in FPDS?" class="textarea form-control" required></textarea>
                 </div>
 
                 <div class="form-login">
                     <button>SUBMIT</button>
+                    <button type="button" onclick="callAPI(document.getElementById('the-date').value,document.getElementById('name-select').value,
+                                         document.getElementById('door-select').value,document.getElementById('pallet-count').value,
+                                         document.getElementById('comments').value)">Call API</button>
                 </div>
             </form>
         </div>
