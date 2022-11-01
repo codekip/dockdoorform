@@ -4,65 +4,6 @@
     <meta charset="utf-8" />
     <title>FPDS pallet form</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <script>
-      var exports = {};
-    </script>
-    
-    <script>
-      // define the callAPI function
-      var callAPI = (theDate, username, door, pallets, comments) => {
-        // instantiate a headers object
-        var myHeaders = new Headers();
-        // add content type header to object
-        myHeaders.append("Content-Type", "application/json");
-        // using built in JSON utility package turn object to string and store in a variable
-        var raw = JSON.stringify({
-          date: theDate,
-          username: username,
-          door: door,
-          pallets: pallets,
-          comments: comments,
-        });
-        // create a JSON object with parameters for API call and store in a variable
-        var requestOptions = {
-          method: "POST",
-          headers: myHeaders,
-          body: raw,
-          redirect: "follow",
-        };
-        // make API call with parameters and use promises to get response
-        console.log("RAWWWW" + raw);
-
-        exports.handler = async (event) => {
-          // Extract values from event and format as strings
-          let name = JSON.stringify(
-            `Hello from Lambda, ${event.username} ${event.door}`
-          );
-          // Create JSON object with parameters for DynamoDB and store in a variable
-          let params = {
-            TableName: "DockDoorTable",
-            Item: {
-              ID: event.date + event.username + event.comments,
-              date: event.date,
-              username: event.username,
-              door: event.door,
-              pallets: event.pallets,
-              comments: event.comments,
-            },
-          };
-          // Using await, make sure object writes to DynamoDB table before continuing execution
-          await dynamodb.put(params).promise();
-          // Create a JSON object with our response and store it in a constant
-          const response = {
-            statusCode: 200,
-            body: name,
-          };
-          // Return the response constant
-          return response;
-        };
-      };
-    </script>
   </head>
 
   <body>
@@ -135,18 +76,76 @@
           </div>
 
           <div class="form-login">
-            <button
-              type="button"
-              onclick="callAPI(document.getElementById('the-date').value,document.getElementById('name-select').value,
-                                         document.getElementById('door-select').value,document.getElementById('pallet-count').value,
-                                         document.getElementById('comments').value)"
-            >
-              SUBMIT
-            </button>
+            <button type="button" onclick="callAPI()">SUBMIT</button>
           </div>
         </form>
       </div>
     </div>
+
+    <script>
+      var exports = {};
+    </script>
+
+    <script>
+      // define the callAPI function
+      let theDate = document.getElementById("the-date").value;
+      let username = document.getElementById("name-select").value;
+      let door = document.getElementById("door-select").value;
+      let pallets = document.getElementById("pallet-count").value;
+      let comments = document.getElementById("comments").value;
+
+      var callAPI = (theDate, username, door, pallets, comments) => {
+        // instantiate a headers object
+        var myHeaders = new Headers();
+        // add content type header to object
+        myHeaders.append("Content-Type", "application/json");
+        // using built in JSON utility package turn object to string and store in a variable
+        var raw = JSON.stringify({
+          date: theDate,
+          username: username,
+          door: door,
+          pallets: pallets,
+          comments: comments,
+        });
+        // create a JSON object with parameters for API call and store in a variable
+        var requestOptions = {
+          method: "POST",
+          headers: myHeaders,
+          body: raw,
+          redirect: "follow",
+        };
+        // make API call with parameters and use promises to get response
+        console.log("RAWWWW" + raw);
+
+        exports.handler = async (event) => {
+          // Extract values from event and format as strings
+          let name = JSON.stringify(
+            `Hello from Lambda, ${event.username} ${event.door}`
+          );
+          // Create JSON object with parameters for DynamoDB and store in a variable
+          let params = {
+            TableName: "DockDoorTable",
+            Item: {
+              ID: event.date + event.username + event.comments,
+              date: event.date,
+              username: event.username,
+              door: event.door,
+              pallets: event.pallets,
+              comments: event.comments,
+            },
+          };
+          // Using await, make sure object writes to DynamoDB table before continuing execution
+          await dynamodb.put(params).promise();
+          // Create a JSON object with our response and store it in a constant
+          const response = {
+            statusCode: 200,
+            body: name,
+          };
+          // Return the response constant
+          return response;
+        };
+      };
+    </script>
   </body>
   <style>
     @import url("https://fonts.googleapis.com/css2?family=El+Messiri:wght@600&family=Montserrat:wght@400;600&display=swap");
