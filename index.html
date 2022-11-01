@@ -1,147 +1,155 @@
 <!DOCTYPE html>
 <html>
-
-<head>
-    <meta charset="utf-8">
+  <head>
+    <meta charset="utf-8" />
     <title>FPDS pallet form</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <script>
-        // define the callAPI function that takes a first name and last name as parameters
-        var callAPI = (theDate, username, door, pallets, comments) => {
-            // instantiate a headers object
-            var myHeaders = new Headers();
-            // add content type header to object
-            myHeaders.append("Content-Type", "application/json");
-            // using built in JSON utility package turn object to string and store in a variable
-            var raw = JSON.stringify({ "date": theDate, "username": username, "door": door, "pallets": pallets, "comments": comments });
-            // create a JSON object with parameters for API call and store in a variable
-            var requestOptions = {
-                method: 'POST',
-                headers: myHeaders,
-                body: raw,
-                redirect: 'follow'
-            };
-            // make API call with parameters and use promises to get response
-            console.log("RAWWWW" + raw);
+              // define the callAPI function that takes a first name and last name as parameters
+              var callAPI = (theDate, username, door, pallets, comments) => {
+                  // instantiate a headers object
+                  var myHeaders = new Headers();
+                  // add content type header to object
+                  myHeaders.append("Content-Type", "application/json");
+                  // using built in JSON utility package turn object to string and store in a variable
+                  var raw = JSON.stringify({ "date": theDate, "username": username, "door": door, "pallets": pallets, "comments": comments });
+                  // create a JSON object with parameters for API call and store in a variable
+                  var requestOptions = {
+                      method: 'POST',
+                      headers: myHeaders,
+                      body: raw,
+                      redirect: 'follow'
+                  };
+                  // make API call with parameters and use promises to get response
+                  console.log("RAWWWW" + raw);
 
-
-
-            // fetch("https://0evbaeuovi.execute-api.us-east-1.amazonaws.com/dev", requestOptions)
-            //     .then(response => response.text())
-            //     .then(result => alert(JSON.parse(result).message))
-            //     .catch(error => console.log('error', error));
-            console.log('Loading function');
-            var AWS = require('aws-sdk');
-            var dynamodb = new AWS.DynamoDB({ apiVersion: '2012-08-10' });
-
-            exports.handler = (event, context, callback) => {
-                console.log(JSON.stringify(event, null, '  '));
-                var tableName = "DockDoorTable";
-                dynamodb.putItem({
-                    "TableName": tableName,
-                    "Item": {
-                        "id": event.Id,
-                        "date": event.thedate,
-                        "username": event.username,
-                        "door": event.door,
-                        "pallets": event.pallets,
-                        "comments": event.comments
-                    }
-                }, function (err, data) {
-                    if (err) {
-                        console.log('Error putting item into dynamodb failed: ' + err);
-                        context.done('error');
-                    }
-                    else {
-                        console.log('great success: ' + JSON.stringify(data, null, '  '));
-                        context.done('Done');
-                    }
-                });
-            };
-
-
-
-
-        }
+          exports.handler = async (event) => {
+          // Extract values from event and format as strings
+          let name = JSON.stringify(`Hello from Lambda, ${event.username} ${event.door}`);
+          // Create JSON object with parameters for DynamoDB and store in a variable
+          let params = {
+              TableName:'DockDoorTable',
+              Item: {
+                  'ID': event.date + event.username + event.comments,
+                  'date': event.date,
+                  'username': event.username,
+                  'door': event.door,
+                  'pallets': event.pallets,
+                  'comments':event.comments,
+              }
+          };
+          // Using await, make sure object writes to DynamoDB table before continuing execution
+          await dynamodb.put(params).promise();
+          // Create a JSON object with our response and store it in a constant
+          const response = {
+              statusCode: 200,
+              body: name
+          };
+          // Return the response constant
+          return response;
+      };
     </script>
-</head>
+  </head>
 
-<body>
-
+  <body>
     <div class="wrapper">
-        <div class="inner">
-            <div class="image-holder">
-                <img src="https://img.icons8.com/external-nawicon-outline-color-nawicon/344/external-pallet-delivery-nawicon-outline-color-nawicon.png"
-                    alt="">
-            </div>
-            <form>
-                <div class="title">
-                    <h1>FPDS PALLET FORM</h1>
-                </div>
-                <div class="form-holder active">
-                    <input id="the-date" type="datetime-local" class="form-control" required />
-                </div>
-                <div class="form-holder">
-                    <select id="name-select" class="form-control" required>
-                        <option value="">Select your name</option>
-                        <option value="Chadwick, John">Chadwick, John</option>
-                        <option value="Drinkwater, Alan">Drinkwater, Alan</option>
-                        <option value="Walsh, Chris">Walsh Chris</option>
-                        <option value="Other">Other - include name in the comments box</option>
-                    </select>
-                </div>
-
-                <div class="form-holder">
-                    <select id="door-select" class="form-control" required>
-                        <option value="">Select the door</option>
-                        <option value="Door 14">Door 14</option>
-                        <option value="Door 15">Door 15</option>
-                        <option value="Door 16">Door 16</option>
-                        <option value="Door 17">Door 17</option>
-                        <option value="Door 18">Door 18</option>
-                        <option value="Door 19">Door 19</option>
-                        <option value="Door 20">Door 20</option>
-                        <option value="Door 21">Door 21</option>
-                    </select>
-                </div>
-
-                <div class="form-holder">
-                    <input id="pallet-count" type="number" placeholder="Number of pallets in FPDS" class="form-control"
-                        required />
-                </div>
-
-                <div class="form-holder" id="txtarea">
-                    <textarea id="comments" name="textarea" rows="10" cols="1"
-                        placeholder="Why are these pallets in FPDS?" class="textarea form-control" required></textarea>
-                </div>
-
-                <div class="form-login">
-                    <button type="button" onclick="callAPI(document.getElementById('the-date').value,document.getElementById('name-select').value,
-                                         document.getElementById('door-select').value,document.getElementById('pallet-count').value,
-                                         document.getElementById('comments').value)">SUBMIT</button>
-                </div>
-            </form>
+      <div class="inner">
+        <div class="image-holder">
+          <img
+            src="https://img.icons8.com/external-nawicon-outline-color-nawicon/344/external-pallet-delivery-nawicon-outline-color-nawicon.png"
+            alt=""
+          />
         </div>
-    </div>
+        <form>
+          <div class="title">
+            <h1>FPDS PALLET FORM</h1>
+          </div>
+          <div class="form-holder active">
+            <input
+              id="the-date"
+              type="datetime-local"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-holder">
+            <select id="name-select" class="form-control" required>
+              <option value="">Select your name</option>
+              <option value="Chadwick, John">Chadwick, John</option>
+              <option value="Drinkwater, Alan">Drinkwater, Alan</option>
+              <option value="Walsh, Chris">Walsh Chris</option>
+              <option value="Other">
+                Other - include name in the comments box
+              </option>
+            </select>
+          </div>
 
-</body>
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=El+Messiri:wght@600&family=Montserrat:wght@400;600&display=swap');
+          <div class="form-holder">
+            <select id="door-select" class="form-control" required>
+              <option value="">Select the door</option>
+              <option value="Door 14">Door 14</option>
+              <option value="Door 15">Door 15</option>
+              <option value="Door 16">Door 16</option>
+              <option value="Door 17">Door 17</option>
+              <option value="Door 18">Door 18</option>
+              <option value="Door 19">Door 19</option>
+              <option value="Door 20">Door 20</option>
+              <option value="Door 21">Door 21</option>
+            </select>
+          </div>
+
+          <div class="form-holder">
+            <input
+              id="pallet-count"
+              type="number"
+              placeholder="Number of pallets in FPDS"
+              class="form-control"
+              required
+            />
+          </div>
+
+          <div class="form-holder" id="txtarea">
+            <textarea
+              id="comments"
+              name="textarea"
+              rows="10"
+              cols="1"
+              placeholder="Why are these pallets in FPDS?"
+              class="textarea form-control"
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-login">
+            <button
+              type="button"
+              onclick="callAPI(document.getElementById('the-date').value,document.getElementById('name-select').value,
+                                         document.getElementById('door-select').value,document.getElementById('pallet-count').value,
+                                         document.getElementById('comments').value)"
+            >
+              SUBMIT
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </body>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=El+Messiri:wght@600&family=Montserrat:wght@400;600&display=swap");
 
     * {
-        -webkit-box-sizing: border-box;
-        -moz-box-sizing: border-box;
-        box-sizing: border-box;
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      box-sizing: border-box;
     }
 
     body {
-        font-family: "Montserrat-Regular";
-        color: #999;
-        font-size: 16px;
-        margin: 0;
-        background-color: #efefef;
+      font-family: "Montserrat-Regular";
+      color: #999;
+      font-size: 16px;
+      margin: 0;
+      background-color: #efefef;
     }
 
     p,
@@ -152,118 +160,117 @@
     h5,
     h6,
     ul {
-        margin: 0;
+      margin: 0;
     }
 
     img {
-        max-width: 100%;
+      max-width: 100%;
     }
 
     ul {
-        padding-left: 0;
-        margin-bottom: 0;
+      padding-left: 0;
+      margin-bottom: 0;
     }
 
-
     input {
-        outline: #000000;
+      outline: #000000;
     }
 
     .wrapper {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        /* background: url("../images/bg-registration-form-4.jpg") no-repeat; */
-        background-size: cover;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      /* background: url("../images/bg-registration-form-4.jpg") no-repeat; */
+      background-size: cover;
     }
 
     .inner {
-        max-width: 850px;
-        margin: auto;
-        background: #fff;
-        display: flex;
-        box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
-        -webkit-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
-        -moz-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
-        -ms-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
-        -o-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
+      max-width: 850px;
+      margin: auto;
+      background: #fff;
+      display: flex;
+      box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
+      -webkit-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
+      -moz-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
+      -ms-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
+      -o-box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
     }
 
     .image-holder {
-        width: 30%;
-        padding-right: 15px;
-        padding-left: 15px;
-        /* padding-top: 50px; */
-        padding-top: 25%;
+      width: 30%;
+      padding-right: 15px;
+      padding-left: 15px;
+      /* padding-top: 50px; */
+      padding-top: 25%;
     }
 
     form {
-        width: 50%;
-        padding-top: 30px;
-        padding-bottom: 30px;
-        /* padding-right: 60px; */
-        padding-left: 15px;
+      width: 50%;
+      padding-top: 30px;
+      padding-bottom: 30px;
+      /* padding-right: 60px; */
+      padding-left: 15px;
     }
 
     h1 {
-        font-size: 30px;
-        font-family: "Montserrat";
-        text-align: center;
-        margin-bottom: 27px;
-        color: #faae6d;
+      font-size: 30px;
+      font-family: "Montserrat";
+      text-align: center;
+      margin-bottom: 27px;
+      color: #faae6d;
     }
 
     .form-holder {
-        padding-left: 24px;
-        position: relative;
-        padding-right: 0;
+      padding-left: 24px;
+      position: relative;
+      padding-right: 0;
     }
 
     .form-control {
-        display: block;
-        width: 100%;
-        border-radius: 23.5px;
-        height: 47px;
-        padding: 0 24px;
-        color: #808080;
-        font-size: 13px;
-        border: none;
-        background: #f7f7f7;
-        margin-bottom: 25px;
+      display: block;
+      width: 100%;
+      border-radius: 23.5px;
+      height: 47px;
+      padding: 0 24px;
+      color: #808080;
+      font-size: 13px;
+      border: none;
+      background: #f7f7f7;
+      margin-bottom: 25px;
     }
 
     .form-control::-webkit-input-placeholder {
-        font-size: 16px;
-        color: #808080;
-        /* text-transform: uppercase; */
-        font-family: "Montserrat-Regular";
+      font-size: 16px;
+      color: #808080;
+      /* text-transform: uppercase; */
+      font-family: "Montserrat-Regular";
     }
 
     .form-control::-moz-placeholder {
-        font-size: 16px;
-        color: #808080;
-        /* text-transform: uppercase; */
-        font-family: "Montserrat-Regular";
+      font-size: 16px;
+      color: #808080;
+      /* text-transform: uppercase; */
+      font-family: "Montserrat-Regular";
     }
 
     .form-control:-ms-input-placeholder {
-        font-size: 16px;
-        color: #808080;
-        /* text-transform: uppercase; */
-        font-family: "Montserrat-Regular";
+      font-size: 16px;
+      color: #808080;
+      /* text-transform: uppercase; */
+      font-family: "Montserrat-Regular";
     }
 
     .form-control:-moz-placeholder {
-        font-size: 16px;
-        color: #808080;
-        /* text-transform: uppercase; */
-        font-family: "Montserrat-Regular";
+      font-size: 16px;
+      color: #808080;
+      /* text-transform: uppercase; */
+      font-family: "Montserrat-Regular";
     }
 
     .textarea {
-        resize: none;
-        height: 150px;
-        font-size: 16px;
+      resize: none;
+      height: 150px;
+      font-size: 16px;
     }
 
     /* .textarea:active {
@@ -271,135 +278,134 @@
     } */
     textarea:focus,
     input:focus {
-        outline: none;
-        border: 1px solid #faae6d;
+      outline: none;
+      border: 1px solid #faae6d;
     }
 
     @-webkit-keyframes hvr-wobble-horizontal {
-        16.65% {
-            -webkit-transform: translateX(8px);
-            transform: translateX(8px);
-        }
+      16.65% {
+        -webkit-transform: translateX(8px);
+        transform: translateX(8px);
+      }
 
-        33.3% {
-            -webkit-transform: translateX(-6px);
-            transform: translateX(-6px);
-        }
+      33.3% {
+        -webkit-transform: translateX(-6px);
+        transform: translateX(-6px);
+      }
 
-        49.95% {
-            -webkit-transform: translateX(4px);
-            transform: translateX(4px);
-        }
+      49.95% {
+        -webkit-transform: translateX(4px);
+        transform: translateX(4px);
+      }
 
-        66.6% {
-            -webkit-transform: translateX(-2px);
-            transform: translateX(-2px);
-        }
+      66.6% {
+        -webkit-transform: translateX(-2px);
+        transform: translateX(-2px);
+      }
 
-        83.25% {
-            -webkit-transform: translateX(1px);
-            transform: translateX(1px);
-        }
+      83.25% {
+        -webkit-transform: translateX(1px);
+        transform: translateX(1px);
+      }
 
-        100% {
-            -webkit-transform: translateX(0);
-            transform: translateX(0);
-        }
+      100% {
+        -webkit-transform: translateX(0);
+        transform: translateX(0);
+      }
     }
 
     @keyframes hvr-wobble-horizontal {
-        16.65% {
-            -webkit-transform: translateX(8px);
-            transform: translateX(8px);
-        }
+      16.65% {
+        -webkit-transform: translateX(8px);
+        transform: translateX(8px);
+      }
 
-        33.3% {
-            -webkit-transform: translateX(-6px);
-            transform: translateX(-6px);
-        }
+      33.3% {
+        -webkit-transform: translateX(-6px);
+        transform: translateX(-6px);
+      }
 
-        49.95% {
-            -webkit-transform: translateX(4px);
-            transform: translateX(4px);
-        }
+      49.95% {
+        -webkit-transform: translateX(4px);
+        transform: translateX(4px);
+      }
 
-        66.6% {
-            -webkit-transform: translateX(-2px);
-            transform: translateX(-2px);
-        }
+      66.6% {
+        -webkit-transform: translateX(-2px);
+        transform: translateX(-2px);
+      }
 
-        83.25% {
-            -webkit-transform: translateX(1px);
-            transform: translateX(1px);
-        }
+      83.25% {
+        -webkit-transform: translateX(1px);
+        transform: translateX(1px);
+      }
 
-        100% {
-            -webkit-transform: translateX(0);
-            transform: translateX(0);
-        }
+      100% {
+        -webkit-transform: translateX(0);
+        transform: translateX(0);
+      }
     }
 
     button {
-        letter-spacing: 2px;
-        border: none;
-        width: 133px;
-        height: 47px;
-        margin-right: 19px;
-        border-radius: 23.5px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        background: #faae6d;
-        font-size: 15px;
-        color: #fff;
-        text-transform: uppercase;
-        font-family: "Montserrat-SemiBold";
-        -webkit-transform: perspective(1px) translateZ(0);
-        transform: perspective(1px) translateZ(0);
-        box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+      letter-spacing: 2px;
+      border: none;
+      width: 133px;
+      height: 47px;
+      margin-right: 19px;
+      border-radius: 23.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      background: #faae6d;
+      font-size: 15px;
+      color: #fff;
+      text-transform: uppercase;
+      font-family: "Montserrat-SemiBold";
+      -webkit-transform: perspective(1px) translateZ(0);
+      transform: perspective(1px) translateZ(0);
+      box-shadow: 0 0 1px rgba(0, 0, 0, 0);
     }
 
     button:hover {
-        -webkit-animation-name: hvr-wobble-horizontal;
-        animation-name: hvr-wobble-horizontal;
-        -webkit-animation-duration: 1s;
-        animation-duration: 1s;
-        -webkit-animation-timing-function: ease-in-out;
-        animation-timing-function: ease-in-out;
-        -webkit-animation-iteration-count: 1;
-        animation-iteration-count: 1;
+      -webkit-animation-name: hvr-wobble-horizontal;
+      animation-name: hvr-wobble-horizontal;
+      -webkit-animation-duration: 1s;
+      animation-duration: 1s;
+      -webkit-animation-timing-function: ease-in-out;
+      animation-timing-function: ease-in-out;
+      -webkit-animation-iteration-count: 1;
+      animation-iteration-count: 1;
     }
 
     .form-login {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-left: 23px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 23px;
     }
 
     @media (max-width: 767px) {
-        .inner {
-            display: block;
-        }
+      .inner {
+        display: block;
+      }
 
-        .image-holder {
-            width: 100%;
-            padding-right: 0;
-        }
+      .image-holder {
+        width: 100%;
+        padding-right: 0;
+      }
 
-        form {
-            width: 100%;
-            padding-top: 30px;
-            padding-bottom: 30px;
-        }
+      form {
+        width: 100%;
+        padding-top: 30px;
+        padding-bottom: 30px;
+      }
 
-        .wrapper {
-            background: none;
-        }
+      .wrapper {
+        background: none;
+      }
     }
-</style>
-<script src="./db.js"></script>
-
+  </style>
+  <script src="./db.js"></script>
 </html>
